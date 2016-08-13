@@ -6,7 +6,7 @@ module.exports={
     },
     devServer:{
         inline:true,
-        port:3334
+        port:3335
     },
     module:{
         loaders:[
