@@ -3,10 +3,20 @@
 <head>
   <title>SetUp</title>
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.33/browser.js"></script>
+
   <link rel="stylesheet" type="text/css" href="./style.css">
 </head>
 <body>
       <div id="app_jerry"/>
-      <script src="index.js"></script>
+      <script src="index.js">
+      </script>
+
+<script>
+   function f(x = 1, y) {
+          return [x,y];
+        }
+        console.log("1212",f(undefined,3));
+</script>
+
 </body>
 </html>

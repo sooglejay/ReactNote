@@ -12,13 +12,17 @@ class App extends React.Component {
   }
 
   update() {
-    this.setState({
-      val: this.state.val + 1
-    })
+    this.setState(function(state, props) {
+      return {
+        val: state.val + 1
+      }
+    });
   }
   render() {
     console.log('hello jiangwei is clicking ')
-    return (<button onClick={this.update}>{this.state.val}</button>)
+    return (<button onClick={ this.update }>
+              { this.state.val }
+            </button>)
   }
 }
 // class Button extends React.Component {

@@ -23,7 +23,7 @@ class App extends React.Component {
         }).code,
         err: ' '
       });
-    } catch (e) {
+    } catch ( e ) {
       // statements
       console.log(e);
       this.setState({
@@ -42,10 +42,13 @@ class App extends React.Component {
       ),
       React.createElement(
         'div',
-        { className: 'container' },
+        {
+          className: 'container'
+        },
         React.createElement('textarea', {
           onChange: this.update,
-          defaultValue: this.state.input }),
+          defaultValue: this.state.input
+        }),
         React.createElement(
           'pre',
           null,
