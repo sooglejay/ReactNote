@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 
 
-import {createStore} from 'redux';
+import {createStore, combineReducers} from 'redux';
 import deepFreeze from 'deep-freeze';
 import expect from 'expect';
 
@@ -46,58 +46,6 @@ const toggleTodos = (state = [], action) => {
             return state;
     }
 };
-const testAddTodo = () => {
-    const stateBefore = [];
-    const action = {
-        type: 'ADD_TODO',
-        id: 0,
-        text: "Learn Redux"
-    };
-    const stateAfter = [
-        {
-            id: 0,
-            text: 'Learn Redux',
-            completed: false
-        }
-    ];
-    deepFreeze(stateBefore);
-    deepFreeze(action);
-
-    expect(
-        todos(stateBefore, action)
-    ).toEqual(stateAfter);
-};
-
-const testToggleTodo = () => {
-    const stateBefore = [
-        {
-            id: 0, text: 'Learn Redux', completed: false
-        },
-        {
-            id: 1, text: 'Go Shopping', completed: false
-        }
-    ];
-    const action = {
-        type: 'TOGGLE_TODO',
-        id: 1,
-    };
-    const stateAfter = [
-        {
-            id: 0, text: 'Learn Redux', completed: false
-        },
-        {
-            id: 1, text: 'Go Shopping', completed: true
-        }
-    ];
-    deepFreeze(stateBefore);
-    deepFreeze(action);
-
-
-    expect(
-        toggleTodos(stateBefore, action)
-    ).toEqual(stateAfter);
-
-};
 
 
 const visibilityFilter = (state = 'SHOW_ALL', action) => {
@@ -117,73 +65,47 @@ const visibilityFilter = (state = 'SHOW_ALL', action) => {
 //     };
 // };
 
-const combineReducers = (reducers)=>{
-    return (state={},action)=>{
-        return Object.keys(reducers).reduce((nextState,key)=>{
-            nextState[key] = reducers[key](
-                state[key],action
-            );
-            return nextState;
-        },{});
-    };
-}
 const todoApp = combineReducers({
     todos,
     visibilityFilter
 });
 
 const store = createStore(todoApp);
+let nextTodoId = 0;
+class TodoApp extends React.Component {
+    render() {
+        return (
+            <div>
+                <input ref ={node => {
+                    this.input = node;
+                } }/>
 
-console.log('Initial State');
-console.log(store.getState());
-console.log('-----------------');
-
-console.log("Dispatching ADD_TODO.");
-store.dispatch({
-    type: 'ADD_TODO',
-    id: 0,
-    text: 'Learn Redux'
-});
-console.log('Current State:');
-console.log(store.getState());
-console.log('-----------------');
-
-
-console.log("Dispatching ADD_TODO.");
-store.dispatch({
-    type: 'ADD_TODO',
-    id: 1,
-    text: 'Go shopping'
-});
-console.log('Current State:');
-console.log(store.getState());
-console.log('-----------------');
-
-
-
-console.log("Dispatching TOGGLE_TODO.");
-store.dispatch({
-    type: 'TOGGLE_TODO',
-    id: 0,
-});
-console.log('Current State:');
-console.log(store.getState());
-console.log('-----------------');
-
-
-
-
-console.log("Dispatching SET_VISIBILITY_FILTER.");
-store.dispatch({
-    type: 'SET_VISIBILITY_FILTER',
-    id: 0,
-    filter:'SHOW_COMPLETED'
-});
-console.log('Current State:');
-console.log(store.getState());
-console.log('-----------------');
-
-
-
-testToggleTodo();
-console.log('All tests passed!');
+                <button onClick = {
+                    () => {
+                        store.dispatch({
+                            type: 'ADD_TODO',
+                            text: this.input.value,
+                            id: nextTodoId++
+                        });
+                        //这里面是js 的语法，可以正确引用input
+                        this.input.value='';
+                    }
+                }>
+                    Add Todo
+                </button>
+                <ul>
+                    {
+                        this.props.todos.map(todo =>
+                            <li key ={todo.id}>{todo.text}</li>
+                        )
+                    }
+                </ul>
+            </div>
+        );
+    }
+}
+const render = () => {
+    ReactDOM.render(<TodoApp todos={store.getState().todos }/>, document.getElementById('app_jerry'));
+}
+store.subscribe(render);
+render();
