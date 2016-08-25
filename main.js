@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 
 
-import {createStore} from 'redux';
+import {createStore,combineReducers} from 'redux';
 import deepFreeze from 'deep-freeze';
 import expect from 'expect';
 
@@ -92,6 +92,7 @@ const testToggleTodo = () => {
     deepFreeze(stateBefore);
     deepFreeze(action);
 
+
     expect(
         toggleTodos(stateBefore, action)
     ).toEqual(stateAfter);
@@ -108,14 +109,20 @@ const visibilityFilter = (state = 'SHOW_ALL', action) => {
     }
 };
 
-const todoApp=(state={},action)=>{
-    return {
-        //每一个 reduxer都是独立运行的，在最后一个dispatch 中，只是 SET_VISIBILITY_FILTER ，但是 todos 并没有影响，保持不变
-        todos:todos(state.todos,action),
-        visibilityFilter:visibilityFilter(state.visibilityFilter,action)
-    };
-};
+// const todoApp=(state={},action)=>{
+//     return {
+//         //每一个 reduxer都是独立运行的，在最后一个dispatch 中，只是 SET_VISIBILITY_FILTER ，但是 todos 并没有影响，保持不变
+//         todos:todos(state.todos,action),
+//         visibilityFilter:visibilityFilter(state.visibilityFilter,action)
+//     };
+// };
+
+const todoApp = combineReducers({
+    todos:todos,
+    visibilityFilter:visibilityFilter
+});
 const store = createStore(todoApp);
+
 console.log('Initial State');
 console.log(store.getState());
 console.log('-----------------');
