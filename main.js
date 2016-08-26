@@ -72,30 +72,28 @@ const todoApp = combineReducers({
 
 const store = createStore(todoApp);
 let nextTodoId = 0;
+let inputText = '';
+
 class TodoApp extends React.Component {
     render() {
-        let node = '';
         return (
             <div>
-                <input ref ="kk"/>
-
+                <input ref ={(node) => {
+                    this.input = node;
+                } }/>
                 <button onClick = {
-
-
                     () => {
-                        if (this.refs.kk != null) {
-                            node = this.refs.kk;
+                        if (this.input != null) {
+                            inputText = this.input.value
+                            this.input.value = '';
+                            this.input.focus();
                         }
                         store.dispatch({
                             type: 'ADD_TODO',
-                            text: node != null ? node.value : "",
+                            text: inputText,
                             id: nextTodoId++
                         });
                         //这里面是js 的语法，可以正确引用input
-                        if (this.refs.kk != null) {
-                            this.refs.kk.value = '';
-                            this.refs.kk.focus();
-                        }
                     }
                 }>
                     Add Todo
@@ -107,6 +105,7 @@ class TodoApp extends React.Component {
                         )
                     }
                 </ul>
+                <h1>{inputText}</h1>
             </div>
         );
     }
