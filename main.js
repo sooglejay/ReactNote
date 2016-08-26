@@ -89,23 +89,49 @@ const getVisibleTodos = (todos, filter) => {
 }
 
 //注意参数是一个对象，是JSX语法的对象; 可以只写属性名，而不写属性的值
-const FilterLinkComponent = ({
-    filter,
-    current,
+const Link = ({
+    active,
     children,
     onClick
 }) => {
-    if (current === filter) {
+    if (active) {
         return (<span>{children}</span>);
     }
     return (
         <a href='#' onClick={ e => {
             e.preventDefault();
-            onClick(filter);
+            onClick();
         } }>{children}</a>
     );
 }
 
+class FilterLink extends React.Component {
+    componentDidMount() {
+        this.unsubscribe = store.subscribe(() => this.forceUpdate());
+    }
+    componentWillUnmount() {
+        this.unsubscribe();
+    }
+
+    render() {
+        const props = this.props;
+        const state = store.getState();
+        return (
+            <Link active ={
+                props.filter === state.visibilityFilter
+            }
+                onClick ={
+                    () => {
+                        store.dispatch({
+                            type: 'SET_VISIBILITY_FILTER',
+                            filter: props.filter
+                        });
+                    }
+                }>
+                {props.children}
+            </Link>);
+    }
+}
 const TodoComponent = ({onClick, completed, text}) =>
     <li
         onClick={onClick}
@@ -113,6 +139,31 @@ const TodoComponent = ({onClick, completed, text}) =>
         {text}
     </li>
 
+class VisibleTodoList extends React.Component {
+    componentDidMount() {
+        this.unsubscribe = store.subscribe(() => this.forceUpdate());
+    }
+    componentWillUnmount() {
+        this.unsubscribe();
+    }
+    render() {
+        const props = this.props;
+        const state = store.getState();
+        return (
+            <TodoListComponent
+                todos={getVisibleTodos(
+                    state.todos,
+                    state.visibilityFilter) }
+                onTodoClick = {
+                    (id) => {
+                        store.dispatch({
+                            type: 'TOGGLE_TODO',
+                            id
+                        });
+                    }
+                } />);
+    }
+}
 const TodoListComponent = ({todos, onTodoClick}) =>
     <ul>
         {
@@ -130,68 +181,50 @@ const TodoListComponent = ({todos, onTodoClick}) =>
 
 let nextTodoId = 0;
 
-const AddTodoComponent = ({onAddClick}) => {
+const AddTodoComponent = () => {
     let input = '';
-    return <div>
-        <input ref ={(node) => {
-            input = node;
-        } }/>
-        <button onClick = {
-            () => {
-                onAddClick(input.value)
-                input.value = ''
-                input.focus();
-            }
-        }>
-            Add Todo
-        </button>
-    </div>
+    return (
+        <div>
+            <input ref ={(node) => {
+                input = node;
+            } }/>
+            <button onClick = {
+                () => {
+                    store.dispatch({
+                        type: 'ADD_TODO',
+                        text: input.value,
+                        id: nextTodoId++
+                    });
+                }
+            }>
+                Add Todo
+            </button>
+        </div>
+    );
 }
 
-const FooterComponent = ({visibilityFilter, onFilterClick}) =>
+const FooterComponent = () =>
     <p>
         Show
         {'  '}
-        <FilterLinkComponent onClick ={onFilterClick } current={visibilityFilter} filter='SHOW_ALL'>ALL</FilterLinkComponent>
+        <FilterLink filter='SHOW_ALL'>ALL</FilterLink>
 
         {'  '}
-        <FilterLinkComponent onClick ={onFilterClick }  current={visibilityFilter} filter='SHOW_ACTIVE'>Active</FilterLinkComponent>
+        <FilterLink  filter='SHOW_ACTIVE'>Active</FilterLink>
 
         {'  '}
-        <FilterLinkComponent onClick ={onFilterClick }  current={visibilityFilter} filter='SHOW_COMPLETED'>Completed</FilterLinkComponent>
+        <FilterLink  filter='SHOW_COMPLETED'>Completed</FilterLink>
 
     </p>
 
-const TodoApp = ({todos, visibilityFilter}) =>
+const TodoApp = () =>
     <div>
-        <AddTodoComponent onAddClick={text => {
-            store.dispatch({
-                type: 'ADD_TODO',
-                text,
-                id: nextTodoId++
-            });
-            //这里面是js 的语法，可以正确引用input
-        } }/>
-        <TodoListComponent todos={getVisibleTodos(todos, visibilityFilter) }
-            onTodoClick = {
-                (id) => {
-                    store.dispatch({
-                        type: 'TOGGLE_TODO',
-                        id
-                    });
-                }
-            }/>
-        <FooterComponent onFilterClick={(filter) => {
-            store.dispatch({
-                filter,
-                type: 'SET_VISIBILITY_FILTER'
-            });
-
-        } } visibilityFilter={visibilityFilter}/>
+        <AddTodoComponent/>
+        <VisibleTodoList />
+        <FooterComponent />
     </div>
 
-const render = () => {
-    ReactDOM.render(<TodoApp {...store.getState() }/>, document.getElementById('app_jerry'));
-}
+ReactDOM.render(<TodoApp/>, document.getElementById('app_jerry'));
+
 store.subscribe(render);
 render();
