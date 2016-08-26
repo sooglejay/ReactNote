@@ -74,21 +74,28 @@ const store = createStore(todoApp);
 let nextTodoId = 0;
 class TodoApp extends React.Component {
     render() {
+        let node = '';
         return (
             <div>
-                <input ref ={node => {
-                    this.input = node;
-                } }/>
+                <input ref ="kk"/>
 
                 <button onClick = {
+
+
                     () => {
+                        if (this.refs.kk != null) {
+                            node = this.refs.kk;
+                        }
                         store.dispatch({
                             type: 'ADD_TODO',
-                            text: this.input.value,
+                            text: node != null ? node.value : "",
                             id: nextTodoId++
                         });
                         //这里面是js 的语法，可以正确引用input
-                        this.input.value='';
+                        if (this.refs.kk != null) {
+                            this.refs.kk.value = '';
+                            this.refs.kk.focus();
+                        }
                     }
                 }>
                     Add Todo
