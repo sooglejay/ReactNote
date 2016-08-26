@@ -1,5 +1,7 @@
 import React from 'react';
-
+import ReactDOM from 'react-dom';
+import {Provider, connect} from 'react-redux';
+import {createStore, combineReducers} from 'redux';
 import deepFreeze from 'deep-freeze';
 import expect from 'expect';
 
@@ -124,37 +126,27 @@ const TodoComponent = ({onClick, completed, text}) =>
         {text}
     </li>
 
-class VisibleTodoList extends React.Component {
-    componentDidMount() {
-        const {store} = this.context;
-        this.unsubscribe = store.subscribe(() => this.forceUpdate());
-    }
-    componentWillUnmount() {
-        this.unsubscribe();
-    }
-    render() {
-        const props = this.props;
-        const {store} = this.context;
-        const state = store.getState();
-        return (
-            <TodoListComponent
-                todos={getVisibleTodos(
-                    state.todos,
-                    state.visibilityFilter) }
-                onTodoClick = {
-                    (id) => {
-                        store.dispatch({
-                            type: 'TOGGLE_TODO',
-                            id
-                        });
-                    }
-                } />);
-    }
+
+const mapStateToProps1212 = (state) => {
+    return {
+        todos: getVisibleTodos(
+            state.todos,
+            state.visibilityFilter)
+    };
+}
+const mapDispatchToProps1212 = (dispatch) => {
+    return {
+        onTodoClick:
+        (id) => {
+            dispatch({
+                type: 'TOGGLE_TODO',
+                id
+            });
+        }
+    };
 }
 
-VisibleTodoList.contextTypes = {
-    store: React.PropTypes.object
-};
+
 
 const TodoListComponent = ({todos, onTodoClick}) =>
     <ul>
@@ -170,6 +162,11 @@ const TodoListComponent = ({todos, onTodoClick}) =>
         }
     </ul>
 
+//函数的签名是不一样的
+const VisibleTodoList = connect(mapStateToProps1212, mapDispatchToProps1212)(TodoListComponent);
+VisibleTodoList.contextTypes = {
+    store: React.PropTypes.object
+};
 
 let nextTodoId = 0;
 
@@ -222,28 +219,11 @@ const TodoApp = () =>
     </div>
 
 
-class Provider extends React.Component {
-    getChildContext() {
-        return {
-            store: this.props.store
-        };
-    }
-    render() {
-        return this.props.children;
-    }
-}
-Provider.childContextTypes = {
-    store: React.PropTypes.object
-};
 
-
-import {createStore, combineReducers} from 'redux';
 const todoApp = combineReducers({
     todos,
     visibilityFilter
 });
-
-import ReactDOM from 'react-dom';
 ReactDOM.render(
     <Provider store = {createStore(todoApp) }>
         <TodoApp />
