@@ -74,8 +74,45 @@ const store = createStore(todoApp);
 let nextTodoId = 0;
 let inputText = '';
 
+//注意 参数只是正常的js语法
+const getVisibleTodos = (todos, filter) => {
+    switch (filter) {
+        case 'SHOW_ALL':
+            return todos;
+        case 'SHOW_ACTIVE':
+            return todos.filter(
+                t=>!t.completed
+            );
+        case 'SHOW_COMPLETED':
+            return todos.filter(
+                t=>t.completed
+            );
+    }
+}
+
+//注意参数是一个对象，是JSX语法的对象; 可以只写属性名，而不写属性的值
+const FilterLink = ({
+    filter,
+    current,
+    children
+}) => {
+    if(current===filter){
+        return(<span>{children}</span>);
+    }
+    return (
+        <a href='#' onClick={ e => {
+            e.preventDefault();
+            store.dispatch({
+                type: 'SET_VISIBILITY_FILTER',
+                filter
+            });
+        } }>{children}</a>
+    );
+}
 class TodoApp extends React.Component {
     render() {
+        const{todos,visibilityFilter}=this.props;
+        const visibleTodos = getVisibleTodos(todos,visibilityFilter);
         return (
             <div>
                 <input ref ={(node) => {
@@ -100,18 +137,37 @@ class TodoApp extends React.Component {
                 </button>
                 <ul>
                     {
-                        this.props.todos.map(todo =>
-                            <li key ={todo.id}>{todo.text}</li>
+                        visibleTodos.map(todo =>
+                            <li key ={todo.id}
+                                onClick={() => {
+                                    store.dispatch({
+                                        type: 'TOGGLE_TODO',
+                                        id: todo.id
+                                    });
+                                } }
+                                style={{ textDecoration: todo.completed ? 'line-through' : 'none' }}>{todo.text}</li>
                         )
                     }
                 </ul>
-                <h1>{inputText}</h1>
+                <p>
+
+                    Show
+                    {'  '}
+                    <FilterLink current={visibilityFilter} filter='SHOW_ALL'>ALL</FilterLink>
+
+                    {'  '}
+                    <FilterLink current={visibilityFilter} filter='SHOW_ACTIVE'>Active</FilterLink>
+
+                    {'  '}
+                    <FilterLink current={visibilityFilter} filter='SHOW_COMPLETED'>Completed</FilterLink>
+
+                </p>
             </div>
         );
     }
 }
 const render = () => {
-    ReactDOM.render(<TodoApp todos={store.getState().todos }/>, document.getElementById('app_jerry'));
+    ReactDOM.render(<TodoApp {...store.getState()}/>, document.getElementById('app_jerry'));
 }
 store.subscribe(render);
 render();
