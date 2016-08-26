@@ -70,6 +70,91 @@ const getVisibleTodos = (todos, filter) => {
     }
 }
 
+let nextTodoId = 0;
+const addTodo = (text) => {
+    return {
+        type: 'ADD_TODO',
+        text,
+        id: nextTodoId++
+    }
+}
+
+const setVisibleFilter = (filter) => {
+    return {
+        type: 'SET_VISIBILITY_FILTER',
+        filter
+    }
+}
+const toggleTodo = (id) => {
+    return {
+        type: 'TOGGLE_TODO',
+        id
+    }
+}
+
+let AddTodoComponent = ({dispatch}) => {
+    let input = '';
+    return (
+        <div>
+            <input ref ={(node) => {
+                input = node;
+            } }/>
+            <button onClick = {
+                () => {
+                    dispatch(addTodo(input.value));
+                    input.value = '';
+                    input.focus();
+                }
+            }>
+                Add Todo
+            </button>
+        </div>
+    );
+}
+AddTodoComponent = connect()(AddTodoComponent);
+
+
+const TodoComponent = ({onClick, completed, text}) =>
+    <li
+        onClick={onClick}
+        style={{ textDecoration: completed ? 'line-through' : 'none' }}>
+        {text}
+    </li>
+
+const TodoListComponent = ({todos, onTodoClick}) =>
+    <ul>
+        {
+            todos.map(todo =>
+                <TodoComponent
+                    //每一个 遍历的元素都必须要有一个key
+                    key={todo.id}
+                    onClick={() => onTodoClick(todo.id) }
+                    {...todo}
+                    />)
+        }
+    </ul>
+
+const mapStateToProps1212 = (state) => {
+    return {
+        todos: getVisibleTodos(
+            state.todos,
+            state.visibilityFilter)
+    };
+}
+const mapDispatchToProps1212 = (dispatch) => {
+    return {
+        onTodoClick:
+        (id) => {
+            dispatch(toggleTodo(id));
+        }
+    };
+}
+//函数的签名是不一样的
+const VisibleTodoList = connect(mapStateToProps1212, mapDispatchToProps1212)(TodoListComponent);
+
+
+
+
 //注意参数是一个对象，是JSX语法的对象; 可以只写属性名，而不写属性的值
 const Link = ({
     active,
@@ -86,117 +171,20 @@ const Link = ({
         } }>{children}</a>
     );
 }
-
-class FilterLink extends React.Component {
-    componentDidMount() {
-        const {store} = this.context;
-        this.unsubscribe = store.subscribe(() => this.forceUpdate());
-    }
-    componentWillUnmount() {
-        this.unsubscribe();
-    }
-
-    render() {
-        const props = this.props;
-        const {store} = this.context;
-        const state = store.getState();
-        return (
-            <Link active ={
-                props.filter === state.visibilityFilter
-            }
-                onClick ={
-                    () => {
-                        store.dispatch({
-                            type: 'SET_VISIBILITY_FILTER',
-                            filter: props.filter
-                        });
-                    }
-                }>
-                {props.children}
-            </Link>);
-    }
-}
-FilterLink.contextTypes = {
-    store: React.PropTypes.object
-};
-const TodoComponent = ({onClick, completed, text}) =>
-    <li
-        onClick={onClick}
-        style={{ textDecoration: completed ? 'line-through' : 'none' }}>
-        {text}
-    </li>
-
-
-const mapStateToProps1212 = (state) => {
+const mapStateToLinkProps = (state, ownProps) => {
     return {
-        todos: getVisibleTodos(
-            state.todos,
-            state.visibilityFilter)
-    };
+        active: ownProps.filter === state.visibilityFilter
+    }
 }
-const mapDispatchToProps1212 = (dispatch) => {
+const mapDispatchToLinkProps = (dispatch, ownProps) => {
     return {
-        onTodoClick:
-        (id) => {
-            dispatch({
-                type: 'TOGGLE_TODO',
-                id
-            });
+        onClick: () => {
+            dispatch(setVisibleFilter(ownProps.filter));
+
         }
-    };
+    }
 }
-
-
-
-const TodoListComponent = ({todos, onTodoClick}) =>
-    <ul>
-        {
-            todos.map(todo =>
-                <TodoComponent
-                    //每一个 遍历的元素都必须要有一个key
-                    key={todo.id}
-                    onClick={() => onTodoClick(todo.id) }
-                    {...todo}
-
-                    />)
-        }
-    </ul>
-
-//函数的签名是不一样的
-const VisibleTodoList = connect(mapStateToProps1212, mapDispatchToProps1212)(TodoListComponent);
-VisibleTodoList.contextTypes = {
-    store: React.PropTypes.object
-};
-
-let nextTodoId = 0;
-
-const AddTodoComponent = (props, {store}) => {
-    let input = '';
-    return (
-        <div>
-            <input ref ={(node) => {
-                input = node;
-            } }/>
-            <button onClick = {
-                () => {
-                    store.dispatch({
-                        type: 'ADD_TODO',
-                        text: input.value,
-                        id: nextTodoId++
-                    });
-                    input.value = '';
-                    input.focus();
-                }
-            }>
-                Add Todo
-            </button>
-        </div>
-    );
-}
-AddTodoComponent.contextTypes = {
-    store: React.PropTypes.object
-};
-
+const FilterLink = connect(mapStateToLinkProps, mapDispatchToLinkProps)(Link);
 const FooterComponent = () =>
     <p>
         Show
@@ -210,6 +198,9 @@ const FooterComponent = () =>
         <FilterLink  filter='SHOW_COMPLETED'>Completed</FilterLink>
 
     </p>
+
+
+
 
 const TodoApp = () =>
     <div>
